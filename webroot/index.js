@@ -1,6 +1,6 @@
 let stage, iconLayer, mapLayer, line, socket
 
-let currentMap = 2;
+let currentMap = 0;
 
 var players = {}
 var playerIcons = {}
@@ -8,8 +8,8 @@ var playerIcons = {}
 function main() {
   stage = new Konva.Stage({
     container: 'container',   // id of container <div>
-    width: 1024,
-    height: 1024
+    width: 1920,
+    height: 1080
   });
   iconLayer = new Konva.Layer();
   mapLayer = new Konva.Layer();
@@ -64,9 +64,12 @@ function main() {
       addPoint(x, y, 2)
     }
   })
-}
 
-document.addEventListener("DOMContentLoaded", () => main())
+
+  socket.on("changeMap", a=> {
+    setMap(a.id)
+  })
+}
 
 function map(OldMin, OldMax, NewMin, NewMax, OldValue) {
   return (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
@@ -134,7 +137,7 @@ function draw() {
     if (playerIcons[i] == null) {
       playerIcons[i] = new Konva.Circle(_.merge({
         radius: 500,
-        fill: 'black',
+        fill: 'gray',
         stroke: 'black',
         strokeWidth: 200
       }, _.pick(player, ['x', 'y'])));

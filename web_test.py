@@ -12,12 +12,6 @@ sio.attach(app)
 app.router.add_static('/', './webroot')
 
 
-@sio.event
-async def connect(sid, environ):
-    print(f"Client connected (id: {sid})")
-    sio.enter_room(sid, "map")
-    await sio.emit("test", room="map")
-
 
 runner = web.AppRunner(app)
 
@@ -26,7 +20,7 @@ def run_server():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(runner.setup())
-    site = web.TCPSite(runner, 'localhost', 8080)
+    site = web.TCPSite(runner, '0.0.0.0', 8080)
     loop.run_until_complete(site.start())
     loop.run_forever()
 
