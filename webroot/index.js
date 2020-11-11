@@ -1,41 +1,191 @@
-const width = 255
-const height = 255
+let stage, iconLayer, mapLayer, line, socket
 
-var canvas = document.getElementById('main');
-var ctx = canvas.getContext('2d');
+let currentMap = 2;
 
-ctx.fillStyle = 'rgb(200, 0, 0)';
-ctx.fillRect(0, height / 2, width, height / 2);
+var players = {}
+var playerIcons = {}
 
-ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
-ctx.fillRect(0, 0, width, height / 2);
+function main() {
+  stage = new Konva.Stage({
+    container: 'container',   // id of container <div>
+    width: 1024,
+    height: 1024
+  });
+  iconLayer = new Konva.Layer();
+  mapLayer = new Konva.Layer();
 
-var myImageData = ctx.createImageData(1, 1);
+  // create our shape
+  line1 = new Konva.Line({
+    points: [],
+    stroke: 'black',
+    strokeWidth: 100,
+    lineJoin: "round",
+    lineCap: "round",
+  });
 
-function getColorForCoord(x, y, data) {
-  var red = y * (data.width * 4) + x * 4;
-  return [data[red], data[red + 1], data[red + 2], data[red + 3]];
+  line2 = new Konva.Line({
+    points: [],
+    stroke: 'red',
+    strokeWidth: 100,
+    lineJoin: "round",
+    lineCap: "round",
+  });
+
+  // add the shape to the layer
+  iconLayer.add(line1);
+  iconLayer.add(line2);
+
+  // add the layer to the stage
+  stage.add(mapLayer);
+  stage.add(iconLayer);
+
+  // draw the image
+  iconLayer.draw();
+
+  // map setup 
+  setMap(currentMap)
+
+  //   addPoint(50,50);
+  //   addPoint(500,500);
+  i = 0
+  //   setInterval(() => {if (i>359) {i=0} else {i+=5} line.attrs.stroke = "hsl("+i+", 100%, 50%)", iconLayer.draw()}, 50)
+
+  socket = io()
+
+  socket.on("movement", a => {
+    players[a.id] = a
+    draw()
+
+    if (a.id == 6) {
+      let { x, y } = a
+      addPoint(x, y, 1)
+    } else if (a.id == 60) {
+      let { x, y } = a
+      addPoint(x, y, 2)
+    }
+  })
 }
 
-function setColorForCoord(x, y, data, colors) {
-  var red = y * (data.width * 4) + x * 4;
-  data[red] = colors[0];
-  data[red + 1] = colors[1];
-  data[red + 2] = colors[2];
-  data[red + 3] = colors[3];
+document.addEventListener("DOMContentLoaded", () => main())
+
+function map(OldMin, OldMax, NewMin, NewMax, OldValue) {
+  return (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
 
 }
 
-
-for (let x = 0; x < width; x++) {
-  for (let y = 0; y < height; y++) {
-    // setColorForCoord(x, y, myImageData, [(x / width) * 255, (y / height) * 255, 0, 255])
-    myImageData[0] = x
-    myImageData[1] = y
-    myImageData[2] = 0
-    myImageData[3] = 255
-    ctx.putImageData(myImageData, x, y);
+function mapXY(xy, set) {
+  let mapers = [
+    [[48, -500], [-48, 1000]],
+    [[48, -500], [-48, 1000]],
+    [[48, -500], [-48, 1000]],
+  ]
+  return {
+    x: (xy.x / mapers[set][0][0] + mapers[set][0][1]),
+    y: (xy.y / mapers[set][1][0] + mapers[set][1][1]),
   }
+
 }
 
-//ctx.putImageData(myImageData, 0, 0);
+function addPoint(x, y, n) {
+  let tailLen = 500
+  if (n == 1) {
+    line1.attrs.points = line1.attrs.points.concat([x, y])
+    if (line1.attrs.points.length > tailLen) {
+      line1.attrs.points = line1.attrs.points.slice(2, tailLen + 2)
+    }
+  } else if (n == 2) {
+    line2.attrs.points = line2.attrs.points.concat([x, y])
+    if (line2.attrs.points.length > tailLen) {
+      line2.attrs.points = line2.attrs.points.slice(2, tailLen + 2)
+    }
+  }
+  iconLayer.draw()
+}
+
+function doTransform() {
+  let transforms = [
+    {
+      x: -330,
+      y: 1125,
+      scaleX: 1 / 35.5,
+      scaleY: 1 / -35.5,
+    },
+    {
+      x: -480,
+      y: 1280,
+      scaleX: 1 / 44,
+      scaleY: 1 / -44,
+    },
+    {
+      x: -775,
+      y: 915,
+      scaleX: 1 / 40,
+      scaleY: 1 / -40,
+    }
+  ]
+  iconLayer.setAttrs(transforms[currentMap])
+  iconLayer.draw();
+}
+
+function draw() {
+  doTransform()
+  for (let i in players) {
+    let player = players[i];
+    if (playerIcons[i] == null) {
+      playerIcons[i] = new Konva.Circle(_.merge({
+        radius: 500,
+        fill: 'black',
+        stroke: 'black',
+        strokeWidth: 200
+      }, _.pick(player, ['x', 'y'])));
+      iconLayer.add(playerIcons[i]);
+    }
+    new Konva.Tween(_.merge({
+      node: playerIcons[i],
+      duration: 0.25,
+    }, _.pick(player, ['x', 'y']))).play();
+  }
+  iconLayer.batchDraw()
+}
+
+function setMap(mdex) {
+  if (mdex < 0 || mdex > 2) {
+    return
+  }
+
+  currentMap = mdex
+  let uri = ""
+
+  switch (mdex) {
+    case 0:
+      uri = "/maps/skeld.png"
+      break;
+    case 1:
+      uri = "/maps/mirahq.png"
+      break;
+    case 2:
+      uri = "/maps/polus.png"
+      break;
+    default:
+      break;
+  }
+  Konva.Image.fromURL(uri, function (img) {
+    img.setAttrs({
+      x: 50,
+      y: 50,
+    });
+    mapLayer.destroyChildren()
+    mapLayer.add(img);
+    mapLayer.batchDraw();
+  });
+
+  doTransform()
+
+}
+
+function erase() {
+  players = []
+  iconLayer.destroyChildren()
+  playerIcons = []
+  draw()
+}

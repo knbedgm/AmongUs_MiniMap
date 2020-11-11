@@ -1,13 +1,15 @@
 from scapy.layers.inet import UDP
 from scapy.packet import Packet, bind_layers, Raw
-from scapy.fields import ByteEnumKeysField, ShortField, ByteField
+from scapy.fields import ByteEnumKeysField, ShortField, ByteField, ConditionalField
 
 
 class HazelPacket(Packet):
     name = "HazelPacket"
     fields_desc = [
         ByteEnumKeysField("header", 0,
-                          {0: "Unreliable", 1: "Reliable", 8: "Hello", 9: "Disconnect", 10: "Ack", 12: "Ping"})
+                          {0: "Unreliable", 1: "Reliable", 8: "Hello", 9: "Disconnect", 10: "Ack", 12: "Ping"}),
+        ConditionalField(ShortField("index", 41),
+                         lambda pkt: HazelPacket.header.i2s[pkt.header] in ["Reliable", "Hello", "Ack", "Ping"]),
     ]
 
     def hasData(self):
@@ -45,26 +47,13 @@ for port in (22023, 22123, 22223, 22323, 22423, 22523, 22623, 22723, 22823, 2292
     bind_layers(UDP, HazelPacket, sport=port)
 
 
-class HazelReliable(Packet):
-    name = "HazelReliable"
-    fields_desc = [
-        ShortField("id", 41)
-    ]
-
-
-bind_layers(HazelPacket, HazelReliable, header=1)
-bind_layers(HazelPacket, HazelReliable, header=8)
-bind_layers(HazelPacket, HazelReliable, header=12)
-
-
 class HazelAck(Packet):
-    name = "HazelReliable"
+    name = "HazelAck"
     fields_desc = [
-        ShortField("id", 41),
         ByteField("Unknown", 0xff)
     ]
 
 
 bind_layers(HazelPacket, HazelAck, header=10)
 
-__all__ = ['HazelPacket', 'HazelReliable', 'HazelAck']
+__all__ = ['HazelPacket', 'HazelAck']
