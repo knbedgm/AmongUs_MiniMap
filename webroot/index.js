@@ -69,6 +69,10 @@ function main() {
   socket.on("changeMap", a => {
     setMap(a.id)
   })
+
+  socket.on("erase", a => {
+    erase()
+  })
 }
 
 function map(OldMin, OldMax, NewMin, NewMax, OldValue) {
