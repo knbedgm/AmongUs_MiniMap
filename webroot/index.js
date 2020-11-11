@@ -15,25 +15,25 @@ function main() {
   mapLayer = new Konva.Layer();
 
   // create our shape
-  line1 = new Konva.Line({
-    points: [],
-    stroke: 'black',
-    strokeWidth: 100,
-    lineJoin: "round",
-    lineCap: "round",
-  });
+  // line1 = new Konva.Line({
+  //   points: [],
+  //   stroke: 'black',
+  //   strokeWidth: 100,
+  //   lineJoin: "round",
+  //   lineCap: "round",
+  // });
 
-  line2 = new Konva.Line({
-    points: [],
-    stroke: 'red',
-    strokeWidth: 100,
-    lineJoin: "round",
-    lineCap: "round",
-  });
+  // line2 = new Konva.Line({
+  //   points: [],
+  //   stroke: 'red',
+  //   strokeWidth: 100,
+  //   lineJoin: "round",
+  //   lineCap: "round",
+  // });
 
-  // add the shape to the layer
-  iconLayer.add(line1);
-  iconLayer.add(line2);
+  // // add the shape to the layer
+  // iconLayer.add(line1);
+  // iconLayer.add(line2);
 
   // add the layer to the stage
   stage.add(mapLayer);
@@ -56,17 +56,17 @@ function main() {
     players[a.id] = a
     draw()
 
-    if (a.id == 6) {
-      let { x, y } = a
-      addPoint(x, y, 1)
-    } else if (a.id == 60) {
-      let { x, y } = a
-      addPoint(x, y, 2)
-    }
+    // if (a.id == 6) {
+    //   let { x, y } = a
+    //   addPoint(x, y, 1)
+    // } else if (a.id == 60) {
+    //   let { x, y } = a
+    //   addPoint(x, y, 2)
+    // }
   })
 
 
-  socket.on("changeMap", a=> {
+  socket.on("changeMap", a => {
     setMap(a.id)
   })
 }

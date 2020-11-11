@@ -25,6 +25,10 @@ def sendMap(map_num):
     asyncio.run(sio.emit("changeMap", data={"id": map_num}))
 
 
+def sendErase():
+    asyncio.run(sio.emit("erase"))
+
+
 @sio.event
 async def connect(sid, environ):
     await sio.emit("changeMap", data={"id": current_map}, to=sid)
@@ -46,7 +50,7 @@ def unk_log(pkt: Raw):
 game.start()  # start game interceptor (nonblocking)
 run()  # start webserver (nonblocking)
 print("running: http://localhost:8080")
-print("\nCommands:\n0:Exit\n1:Skeld\n2:MiraHQ\n3:Polus\n")
+print("\nCommands:\n0:Exit\n1:Skeld\n2:MiraHQ\n3:Polus\n9:Erase\n")
 while True:
     try:
         num = int(input("m#: "))
@@ -55,6 +59,8 @@ while True:
             current_map = num-1
         elif num == 0:
             break
+        elif num == 9:
+            sendErase()
         else:
             raise ValueError()
     except ValueError:
